@@ -1,7 +1,7 @@
 # A-comparative-Analysis-between-Zomato-Swiggy
 Zomato and Swiggy data helps customers choose the best food ordering app. Compare companies and let customers decide. Clean, imputed, pre-processed data improve comparability. Profitability gains. Sandbox datasets include cuisine, table reservations, two-person cost, famous dishes, and more. Visualising price, quality, and cuisine helps.
 The work consists of analyzing and comparing data from Zomato and Swiggy to help customers choose the best app for ordering food. Based on this, we will compare different elements of the both the companies and let the customer choose the best in different scenarios. The data must first be cleaned, certain values must be imputed (if necessary), and the data must be pre-processed in order to have better comparability. This will assist the organization in analyzing the variables influencing the value of its business. The dataset(s) under consideration for the sandbox contain a wide range of features, such as cuisine type, table reservations, average cost for two people, well-known culinary items, and much more. All these characteristics can assist in predicting a better visualization, assisting customers in selecting the pricing, food quality, and culinary style.
-
+ 
 ## Dataset Links:
 
 https://www.kaggle.com/datasets/shrutimehta/zomato-restaurants-data/code
