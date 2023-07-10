@@ -1,0 +1,427 @@
+---
+title: "Swiggy Whole"
+author: "Team S"
+date: "2022-10-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Loading the dataset
+
+```{r}
+print(getwd())
+df=read.csv(file ="Swiggy_dataset.csv")
+```
+
+
+## Data Structure
+
+```{r}
+head(df)
+```
+
+
+```{r}
+dim(df)
+```
+
+```{r}
+str(df)
+```
+
+```{r}
+summary(df)
+```
+
+## Data Cleaning and Imputation
+
+### Removing Records having NA values
+```{r}
+df=df[-18]
+dim(df)
+str(df)
+```
+
+
+
+```{r}
+df=df[complete.cases(df),]
+dim(df)
+```
+
+```{r}
+#install.packages("Hmisc")
+library(ggplot2)
+library(Hmisc)
+```
+
+### Deriving cost from string type
+```{r}
+cost=c()
+for(i in df$costForTwoStrings){
+  s=substr(i,4,6)
+  cost=c(cost,as.integer(s))
+}
+
+df$costForTwoStrings =cost
+cost=df[complete.cases(df),]
+#cost$costForTwoStrings
+dim(cost)
+```
+
+
+## Data Analysis
+
+### 1. Average Cost for 2 in all cities
+```{r}
+library(dplyr)
+cities=c("Chennai   ","Mumbai    ","Hyderabad ","Ahmedabad ","Bangalore ","Surat     ","Kolkata   ","Pune      ","Delhi     ")
+city=c("Chennai","Mumbai","Hyderabad","Ahmedabad","Bangalore","Surat","Kolkata","Pune","Delhi")
+n=1
+print.noquote("   City               Average  Cost For Two in Rs")
+print.noquote("             ")
+for(i in city){
+  x=cost%>%filter(city==i)
+  print.noquote(paste(cities[n],"                     ",round(summarise(x," "=mean(costForTwoStrings)))))
+  n=n+1
+}
+```
+
+### 2. Number of Reastaurants in different Cities
+```{r}
+print.noquote("   City                      Number Of Reastaurants")
+print.noquote("             ")
+n=1
+for(i in city){
+  x=cost%>%filter(city==i)%>%group_by(city)
+  print.noquote(paste(cities[n],"                       ",nrow(x)))
+  n=n+1
+}
+```
+
+
+### 3. Types of Cuisenes Available
+```{r}
+dish=c()
+for(i in df$cuisines ){
+  a=unlist(strsplit(i,"'"))
+  for(j in 1:length(a)){
+    if((a[j]!="[") & (a[j]!="]") & (a[j]!=" ")){
+      dish=c(dish,noquote(a[j]))
+    }
+  }
+}
+print((unique(dish)))
+```
+
+
+### 4. Each Cuisine is Served by how many Reastaurants
+```{r}
+cbind(table(dish))
+```
+
+### 5. Which Cuisine is available Mostly
+```{r}
+m=max(table(dish))
+dish=(sort(table(dish)))
+dish[length(dish)]
+```
+
+### 6.Swiggy Banglore Analysis
+```{r}
+blr=read.csv("Swiggy Bangalore Outlet Details.csv")
+blr=blr[complete.cases(blr),]
+
+
+print(paste("Maximum Rated Reastaurant : ",blr$Shop_Name[which(blr$Rating==max(blr$Rating))]))
+print.noquote(paste("         Location:             ",blr$Location[which(blr$Rating==max(blr$Rating))]))
+print.noquote(paste("         Rating:                     ",blr$Rating[which(blr$Rating==max(blr$Rating))]))
+print.noquote(paste("         Average cost for 2:    Rs ",substr(blr$Cost_for_Two[which(blr$Rating==max(blr$Rating))],4,7)))
+print.noquote(paste("         Cuisines Available:   ",blr$Cuisine[which(blr$Rating==max(blr$Rating))]))
+
+for(i in 1:4){
+  print.noquote("   ")
+}
+
+print(paste("Minimum Rated Reastaurant : ",blr$Shop_Name[which(blr$Rating==min(blr$Rating))]))
+print.noquote(paste("         Location:             ",blr$Location[which(blr$Rating==min(blr$Rating))]))
+print.noquote(paste("         Rating:                     ",blr$Rating[which(blr$Rating==min(blr$Rating))]))
+print.noquote(paste("         Average cost for 2:    Rs ",substr(blr$Cost_for_Two[which(blr$Rating==min(blr$Rating))],4,7)))
+print.noquote(paste("         Cuisines Available:   ",blr$Cuisine[which(blr$Rating==min(blr$Rating))]))
+
+```
+
+## Data Visualization
+
+### 1.Horizontal Bar Chart  with sums of each rating
+```{r}
+
+library(dplyr)
+df %>% select(avgRating)%>% group_by(avgRating) %>% count()  %>%
+  ggplot(aes(x=reorder(avgRating,n),y=n))+ 
+  geom_bar(stat = "identity", fill= "steelblue") + theme_minimal()+
+  coord_flip() + geom_text(aes(label=n),vjust=0.3,size=3.5,color="black")
+```
+
+### 2. Pie Chart for City wise Distribution on Swiggy
+
+```{r}
+
+pie(table(df$city),main="Citywise distribution")
+```
+### 3. Bar Plot to visualize the Vegetarian Lovers
+
+```{r}
+#Bar Plot to visualize the Vegetarian Lovers
+ggplot(df,aes(x=veg,fill=veg))+ geom_bar() + ggtitle("Vegetarian Reastaurant Type") + xlab("Distribution")
+
+```
+### 4. 3D pie chart
+
+```{r}
+
+library(plotrix)
+#install.packages("plotrix")
+x=c(6400,2254)
+names(x)=c("Non-Veg","Veg")
+pie3D(x ,labels=names(x) ,col = "white",
+main = "3D distribution",
+labelcol = "darkgreen", col.main = "darkgreen")
+```
+
+### 5. histogram Showing Number of deliveries in a paricular time range
+
+```{r}
+hist(df$deliveryTime,main="Number of Deliveries in different Time Range",xlab="Time in min")
+```
+
+### 6. Box Plot For Summary statistics
+
+```{r}
+
+boxplot(df$maxDeliveryTime)
+
+```
+
+### 7. Density plot for the cities
+
+```{r}
+
+
+theme_set(theme_classic())
+
+# Plot
+g <- ggplot(df, aes(city))
+g + geom_density(aes(fill=factor(city)), alpha=0.8) + 
+    labs(title="Density plot", 
+         subtitle="City grouped by Avg-Rating",
+         x="City ",
+         fill="# Cities")
+```
+
+
+## Classification Model
+
+```{r}
+cost$avgRating=as.numeric(cost$avgRating)
+cost$costForTwoStrings=as.numeric(cost$costForTwoStrings)
+cost$deliveryTime =as.numeric(cost$deliveryTime)
+
+
+
+#is.na(cost$avgRating)
+#is.na(cost$costForTwoStrings)
+#is.na(cost$deliveryTime)
+
+cost=cost[complete.cases(cost),]
+dim(cost)
+
+for (i in colnames(cost)){
+  print(sum(is.na(cost[i])))
+}
+
+```
+
+
+
+### KNN
+
+```{r}
+
+#install.packages("class")
+library(class)
+library(MASS)
+
+train_set = cost[0:4324,c("costForTwoStrings","deliveryTime","avgRating")]
+test_set = cost[4325:5406,c("costForTwoStrings","deliveryTime","avgRating")]
+
+
+train_scale = scale(train_set[,c("avgRating","costForTwoStrings","deliveryTime")] )
+test_scale = scale (test_set[,c("avgRating","costForTwoStrings","deliveryTime")] )
+
+classifier_knn = knn(train = train_scale, test = test_scale, cl = train_set$avgRating, k = 1)
+table(classifier_knn)
+ 
+```
+
+```{r}
+misClassError = mean(classifier_knn != test_set$avgRating)
+per =  round((1-misClassError)*100, 2)
+paste0('Accuracy =', per, '%')
+```
+
+
+### GBM
+
+```{r}
+#install.packages("gbm")
+#install.packages('caret')
+library(gbm)
+
+
+train_set = cost[0:4324,c("costForTwoStrings","deliveryTime","avgRating")]
+test_set = cost[4325:5406,c("costForTwoStrings","deliveryTime","avgRating")]
+
+test_x= test_set[,-3]
+test_y = test_set[,3]
+
+model_gbm = gbm(train_set$avgRating ~.,data = train_set,distribution = "gaussian",cv.folds = 10,shrinkage = .01,n.minobsinnode = 10,n.trees = 400)
+```
+
+
+```{r}
+
+pred_y=predict.gbm(model_gbm, test_x)
+```
+
+
+```{r}
+residuals = test_y - pred_y
+RMSE = sqrt(mean(residuals^2))
+x=(100.0- round(RMSE,3))
+paste("Accuracy :",x)
+```
+
+
+
+### Decision Tree
+
+```{r}
+#install.packages("caTools")
+#install.packages("party")
+library(datasets)
+library(caTools)
+library(party)
+library(dplyr)
+library(magrittr)
+
+copy=cost
+
+copy$city = as.integer(factor(copy$city))
+copy$area = as.integer(factor(copy$area))
+copy$totalRatingsString = as.integer(factor(copy$totalRatingsString))
+copy$veg= as.integer(factor(copy$veg))
+
+
+str(copy)
+```
+
+
+
+```{r}
+copy=copy[,c("city","area","totalRatingsString","avgRating","veg","deliveryTime")]
+copy$avgRating= as.integer(factor(copy$avgRating))
+
+str(copy)
+
+
+sample_data = sample.split(copy, SplitRatio = 0.8)
+train_data <- subset(copy, sample_data == TRUE)
+test_data <- subset(copy, sample_data == FALSE)
+
+model<- ctree(avgRating ~ ., train_data)
+plot(model)
+```
+
+```{r}
+test_data$avgRating
+```
+
+
+```{r}
+pred = predict(model,test_data,type="prob")
+residuals = as.integer(test_data$avgRating) -as.integer(pred)
+RMSE = sqrt(mean(residuals^2))
+x=(100.0- round(RMSE,3))
+paste("Accuracy :",x)
+```
+
+```{r}
+str(cost)
+```
+
+
+```{r}
+library(dplyr)
+library(Hmisc)
+library(stringr)
+#install.packages("svDialogs")
+library(svDialogs)
+
+cost$avgRating=as.numeric(cost$avgRating)
+
+one=function(cty,rs,ps){
+  for1=as.integer((cost$costForTwoStrings)/2)
+  forn=as.integer(ps*for1)
+  cost=cbind(cost,forn)
+  l=rs-1000
+  u=rs+1000
+  ans=cost%>%filter(city==cty)%>%filter(forn>=l & u>=forn)%>%subset(select=c("name","avgRating","costForTwoStrings","maxDeliveryTime","cuisines","address","forn","city"))
+  maxx=which(ans$avgRating==max(ans$avgRating))
+  print(ans[maxx,])
+}
+
+two=function(cty,ar){
+  ans=cost%>%filter(city==cty)%>%filter(area==ar)%>%subset(select=c("name","avgRating","costForTwoStrings","maxDeliveryTime","cuisines","address","area","city"))
+  maxx=which(ans$avgRating==max(ans$avgRating))
+  print(ans[maxx,])
+}
+
+three=function(cus,tm){
+  ans=cost%>%filter(str_detect(cost$cuisines,cus))%>%filter(deliveryTime==tm)%>%subset(select=c("name","avgRating","costForTwoStrings","maxDeliveryTime","cuisines","address","city"))
+  maxx=which(ans$avgRating==max(ans$avgRating))
+  print(ans)
+
+}
+
+print(noquote("Enter the selection parameter number :"))
+print(noquote("1.   by choosing Budget & city"))
+print(noquote("2.   by choosing city & area "))
+print(noquote("3.   by choosing max delivery time & cuisine"))
+
+#choice = as.integer(readline(prompt = "Enter number : "))
+
+choice=as.numeric(dlgInput("Enter your choice: ", Sys.info()["user"])$res)
+
+if(choice==1){
+  city=dlgInput("Enter City: ", Sys.info()["user"])$res
+  budget=as.numeric(dlgInput("Enter Budget: ", Sys.info()["user"])$res)
+  person=as.numeric(dlgInput("Enter No. of persons : ", Sys.info()["user"])$res)
+  one(city,budget,person)
+}else if(choice==2){
+  city=dlgInput("Enter City: ", Sys.info()["user"])$res
+  area=dlgInput("Enter Area: ", Sys.info()["user"])$res
+  two(city,area)
+}else{
+  #cuisine=readline(prompt="Cuisine :")
+  #time=readline(prompt="Delivery Time :")
+  cuisine=dlgInput("Enter Cuisine: ", Sys.info()["user"])$res
+  time=as.numeric(dlgInput("Enter Time: ", Sys.info()["user"])$res)
+  three(cuisine,time)
+}
+```
+
